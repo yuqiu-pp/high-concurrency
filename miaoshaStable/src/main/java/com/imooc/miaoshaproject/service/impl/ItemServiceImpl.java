@@ -14,11 +14,13 @@ import com.imooc.miaoshaproject.service.PromoService;
 import com.imooc.miaoshaproject.validator.ValidationResult;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -38,6 +40,9 @@ public class ItemServiceImpl implements ItemService {
 
     @Autowired
     private ItemStockDOMapper itemStockDOMapper;
+
+
+
 
     private ItemDO convertItemDOFromItemModel(ItemModel itemModel){
         if(itemModel == null){
@@ -99,9 +104,9 @@ public class ItemServiceImpl implements ItemService {
         if(itemDO == null){
             return null;
         }
+
         //操作获得库存数量
         ItemStockDO itemStockDO = itemStockDOMapper.selectByItemId(itemDO.getId());
-
 
         //将dataobject->model
         ItemModel itemModel = convertModelFromDataObject(itemDO,itemStockDO);

@@ -8,6 +8,7 @@ import com.imooc.miaoshaproject.response.CommonReturnType;
 import com.imooc.miaoshaproject.service.model.UserModel;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,8 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by hzllb on 2018/11/11.
@@ -33,7 +36,8 @@ public class UserController  extends BaseController{
     @Autowired
     private HttpServletRequest httpServletRequest;
 
-
+    @Autowired
+    private RedisTemplate redisTemplate;
 
 
 
@@ -140,11 +144,23 @@ public class UserController  extends BaseController{
 
         //用户登陆服务,用来校验用户登陆是否合法
         UserModel userModel = userService.validateLogin(telphone,this.EncodeByMd5(password));
-        //将登陆凭证加入到用户登陆成功的session内
-        this.httpServletRequest.getSession().setAttribute("IS_LOGIN",true);
-        this.httpServletRequest.getSession().setAttribute("LOGIN_USER",userModel);
 
-        return CommonReturnType.create(null);
+        //将登陆凭证加入到用户登陆成功的session内
+        // this.httpServletRequest.getSession().setAttribute("IS_LOGIN",true);
+        // this.httpServletRequest.getSession().setAttribute("LOGIN_USER",userModel);
+
+        // 替换session方式
+        // 将token和用户信息存入redis,并返回token给前端
+        // 生成token
+        String uuidToken = UUID.randomUUID().toString();
+        uuidToken = uuidToken.replace("_", "");
+        // 建立token和用户登录态的关联
+        redisTemplate.opsForValue().set(uuidToken, userModel);
+        // redis的set操作超时时间
+        redisTemplate.expire(uuidToken, 1, TimeUnit.HOURS);
+
+        // 返回token。// session方式返回null
+        return CommonReturnType.create(uuidToken);
     }
 
 
