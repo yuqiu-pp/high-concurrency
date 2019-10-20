@@ -9,6 +9,10 @@ import com.imooc.miaoshaproject.service.model.UserModel;
 public interface UserService {
     //通过用户ID获取用户对象的方法
     UserModel getUserById(Integer id);
+
+    //用户模型
+    UserModel getUserByIdInCache(Integer id);
+
     void register(UserModel userModel) throws BusinessException;
 
     /*

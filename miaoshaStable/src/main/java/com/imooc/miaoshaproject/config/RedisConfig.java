@@ -1,6 +1,11 @@
 package com.imooc.miaoshaproject.config;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.imooc.miaoshaproject.serializer.JodaDateTimeJsonDeserializer;
+import com.imooc.miaoshaproject.serializer.JodaDateTimeJsonSerializer;
+import org.joda.time.DateTime;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -24,6 +29,16 @@ public class RedisConfig {
 
         // 解决value的序列化方式
         Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
+        ObjectMapper objectMapper = new ObjectMapper();
+        SimpleModule simpleModule = new SimpleModule();
+        simpleModule.addSerializer(DateTime.class, new JodaDateTimeJsonSerializer());
+        simpleModule.addDeserializer(DateTime.class, new JodaDateTimeJsonDeserializer());
+
+        objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+
+        objectMapper.registerModule(simpleModule);
+        // 绑定
+        jackson2JsonRedisSerializer.setObjectMapper(objectMapper);
         template.setValueSerializer(jackson2JsonRedisSerializer);
 
         return template;
