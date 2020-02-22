@@ -1,3 +1,10 @@
+.DS_store
+miaoshaStable/.DS_store
+miaoshaStable/target
+target
+
+
+
 # Compiled class file
 *.class
 
