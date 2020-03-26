@@ -34,6 +34,9 @@ public class ItemServiceImpl implements ItemService{
     @Autowired
     ItemStockDOMapper itemStockDOMapper;
 
+    @Autowired
+    PromoSerivce promoSerivce;
+
     // 这里不捕获异常，controller捕获，统一返回错误创建失败
     @Override
     // 改进：事务标签打的位置
@@ -76,6 +79,12 @@ public class ItemServiceImpl implements ItemService{
         }
         ItemStockDO itemStockDO = itemStockDOMapper.selectByItemId(itemDO.getId());
         ItemModel itemModel = this.convertItemModel(itemDO, itemStockDO);
+        // 秒杀
+        PromoModel promoModel = promoSerivce.getPromoByItemId(itemModel.getId());
+        // 改进：没有或者结束的秒杀活动不让用户感知
+        if (promoModel!=null || promoModel.getStatus()!=3){
+            itemModel.setPromoModel(promoModel);
+        }
 
         return itemModel;
     }
@@ -116,6 +125,36 @@ public class ItemServiceImpl implements ItemService{
         }
 
         return itemModelList;
+    }
+
+    @Transactional
+    @Override
+    public boolean decreaseStock(Integer itemId, Integer amount) throws BusinessException {
+        // 库存是否足够通过sql来实现
+        // 校验商品是否存在
+        ItemStockDO itemSockDO = itemStockDOMapper.selectByItemId(itemId);
+        if (itemSockDO == null){
+            throw new BusinessException(EmBusinessErr.ITEM_NOT_FOUND);
+        }
+        int affectRow = itemStockDOMapper.decreaseStock(itemId, amount);
+        if (affectRow < 0){
+            return false;
+        }
+        return true;
+    }
+
+    @Transactional
+    @Override
+    public void increaseSales(Integer itemId, Integer amount) throws BusinessException {
+        // 参数检查
+        ItemDO itemDO = itemDOMapper.selectByPrimaryKey(itemId);
+        if (itemDO == null){
+            throw new BusinessException(EmBusinessErr.ITEM_NOT_FOUND);
+        }
+        // itemDO.setSales(itemDO.getSales() + amount);
+        // int affectRow = itemDOMapper.updateByPrimaryKeySelective(itemDO);
+        // 改进：这样更新可能影响itemDO其它字段的值，例如并发情况下发生覆盖
+        itemDOMapper.increateSales(itemId, amount);
     }
 
 
