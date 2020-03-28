@@ -118,7 +118,9 @@ public class OrderServiceImpl implements OrderService {
         }
         orderModel.setItemPrice(itemModel.getPrice());
         orderModel.setAmount(amount);
-        orderModel.setOrderPrice(orderModel.getItemPrice().multiply(new BigDecimal(amount)));
+        // orderModel.setOrderPrice(orderModel.getItemPrice().multiply(new BigDecimal(amount)));
+        // 改进：bigdecimal和double的计算
+        orderModel.setOrderPrice(orderModel.getItemPrice().multiply(BigDecimal.valueOf(amount)));
         orderModel.setId(orderId);
         // 写数据库
         OrderDO orderDO = convertFromModel(orderModel);
